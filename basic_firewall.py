@@ -250,30 +250,44 @@ class BasicFirewall:
         # If already present, print "already in blocklist" message
         if ip not in self.rules["blocked_ips"]:
             self.rules["blocked_ips"].append(ip)
-            print(f"[+] IP {ip} added to blocklist")
+            print(f"[+] IP {ip} added to blocklist.")
         else:
-            print(f"[!] IP {ip} already in blocklist")
+            print(f"[!] IP {ip} already in blocklist.")
     
     def add_allowed_ip(self, ip):
         # TODO: Add IP to whitelist (same pattern as add_blocked_ip)
         # Use self.rules["allowed_ips"] instead
-        pass
+        if ip not in self.rules["allowed_ips"]:
+            self.rules["allowed_ips"].append(ip)
+            print(f"[+] IP {ip} added to whitelist.")
+        else:
+            print(f"[!] IP {ip} already in whitelist.")
     
     def add_blocked_port(self, port):
         # TODO: Add port to blocklist (same pattern, use self.rules["blocked_ports"])
         # Also print the service name using self.identify_service(port)
-        pass
+        if port not in self.rules["blocked_ports"]:
+            self.rules["blocked_ports"].append(port)
+            print(f"[+] Port {self.identify_service(port)} added to blocklist.")
+        else:
+            print(f"[!] Port {self.identify_service(port)} already in blocklist.")
     
     def add_blocked_protocol(self, protocol):
         # TODO: Add protocol to blocklist (same pattern, use self.rules["blocked_protocols"])
-        pass
+        if protocol not in self.rules["blocked_protocols"]:
+            self.rules["blocked_protocols"].append(protocol)
+            print(f"[+] Protocol {protocol} added to blocklist.")
+        else:
+            print(f"[!] Protocol {protocol} already in blocklist.")
     
     def add_time_rule(self, ip, start_time, end_time):
         # TODO: Add time-based blocking rule
         # Create a dictionary with keys: "ip", "start", "end"
         # Append to self.rules["time_rules"]
         # Print confirmation message
-        pass
+        new_dict = {"ip": ip, "start": start_time, "end": end_time}
+        self.rules["time_rules"].append(new_dict)
+        print(f"[+] Time rule added: Block {ip} from {start_time} to {end_time}")
     
     # ========== REMOVE RULES (TODO: Complete these - Similar pattern to ADD) ==========
     
@@ -282,21 +296,33 @@ class BasicFirewall:
         # Check if IP is in the list, if yes remove it, if no print "not in blocklist"
         if ip in self.rules["blocked_ips"]:
             self.rules["blocked_ips"].remove(ip)
-            print(f"[+] IP {ip} removed from blocklist")
+            print(f"[+] IP {ip} removed from blocklist.")
         else:
-            print(f"[!] IP {ip} not in blocklist")
+            print(f"[!] IP {ip} not in blocklist.")
     
     def remove_allowed_ip(self, ip):
         # TODO: Remove IP from whitelist (same pattern, use allowed_ips)
-        pass
+        if ip in self.rules["allowed_ips"]:
+            self.rules["allowed_ips"].remove(ip)
+            print(f"[+] IP {ip} removed from whitelist.")
+        else:
+            print(f"[!] IP {ip} not in whitelist.")
     
     def remove_blocked_port(self, port):
         # TODO: Remove port from blocklist (same pattern, use blocked_ports)
-        pass
+        if port in self.rules["blocked_ports"]:
+            self.rules["blocked_ports"].remove(port)
+            print(f"[+] Port {self.identify_service(port)} removed from blocklist.")
+        else:
+            print(f"[!] Port {self.identify_service(port)} not in blocklist.")
     
     def remove_blocked_protocol(self, protocol):
         # TODO: Remove protocol from blocklist (same pattern, use blocked_protocols)
-        pass
+        if protocol in self.rules["blocked_protocols"]:
+            self.rules["blocked_protocols"].remove(protocol)
+            print(f"[+] Protocol {protocol} removed from blocklist.")
+        else:
+            print(f"[!] Protocol {protocol} not in blocklist.")
     
     # ========== DISPLAY INFORMATION (TODO: Complete these) ==========
     
