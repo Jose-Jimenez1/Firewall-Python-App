@@ -3,14 +3,12 @@ import threading
 import select
 import re
 
-# --- Configuración ---
+# Configuración
 PROXY_HOST = '0.0.0.0'
 PROXY_PORT = 8888
-BUFFER_SIZE = 8192  # Aumentamos un poco el buffer
+BUFFER_SIZE = 8192
 
-# --- Reglas de Filtrado ---
-# Nota: En HTTPS solo podemos ver el dominio principal (ej. facebook.com),
-# no podemos ver qué video o foto específica estás viendo.
+# Reglas de Filtrado
 SITIOS_BLOQUEADOS = [
     re.compile(r"(.*\.?)facebook\.com", re.IGNORECASE),
     re.compile(r"(.*\.?)instagram\.com", re.IGNORECASE),
@@ -20,16 +18,16 @@ SITIOS_BLOQUEADOS = [
 ]
 
 def esta_bloqueado(host):
-    """Verifica si el host coincide con las reglas."""
+    # Verifica si el host coincide con las reglas.
     if not host: return False
     for regla in SITIOS_BLOQUEADOS:
         if regla.match(host):
-            print(f"🚫 BLOQUEADO: {host}")
+            print(f"BLOQUEADO: {host}")
             return True
     return False
 
 def enviar_error_http(client_socket):
-    """Envía página de bloqueo para conexiones HTTP normales."""
+    # Envía página de bloqueo para conexiones HTTP normales.
     html = b"""HTTP/1.1 403 Forbidden\r\nContent-Type: text/html\r\n\r\n
     <html><body><h1>Sitio Bloqueado por el Proyecto</h1></body></html>"""
     try:
@@ -38,18 +36,13 @@ def enviar_error_http(client_socket):
         pass
 
 def transferencia_bidireccional(client_socket, remote_socket):
-    """
-    Usa 'select' para mover datos entre el cliente y el servidor remoto
-    lo más rápido posible. Esto cumple con el requisito de tu imagen.
-    """
     sockets = [client_socket, remote_socket]
     
     while True:
-        # select espera a que uno de los sockets tenga datos listos para leer
         readable, _, _ = select.select(sockets, [], [], 10)
         
         if not readable:
-            break # Timeout o inactividad
+            break 
 
         try:
             for sock in readable:
@@ -57,7 +50,7 @@ def transferencia_bidireccional(client_socket, remote_socket):
                 
                 data = sock.recv(BUFFER_SIZE)
                 if not data:
-                    return # Se cerró la conexión
+                    return 
                 
                 other_sock.sendall(data)
         except Exception:
@@ -89,29 +82,25 @@ def manejar_conexion(client_socket, client_addr):
                 host = host_port
                 port = 443
             
-            print(f"🔒 HTTPS Tunnel hacia: {host}")
+            print(f"HTTPS Tunnel hacia: {host}")
 
-            # 1. VERIFICAR BLOQUEO
+            # VERIFICAR BLOQUEO
             if esta_bloqueado(host):
-                # En HTTPS no podemos inyectar HTML de error fácilmente, 
-                # así que cerramos la conexión abruptamente.
                 client_socket.close()
                 return
 
-            # 2. CONECTAR AL SERVIDOR REMOTO
+            # CONECTAR AL SERVIDOR REMOTO
             remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             remote_socket.connect((host, port))
 
-            # 3. RESPONDER AL NAVEGADOR QUE EL TÚNEL ESTÁ LISTO
-            # Esto es vital para que HTTPS funcione
+            # RESPONDER AL NAVEGADOR QUE EL TÚNEL ESTÁ LISTO
             client_socket.sendall(b"HTTP/1.1 200 Connection Established\r\n\r\n")
 
-            # 4. INICIAR TRANSFERENCIA DE DATOS CIFRADOS
+            # INICIAR TRANSFERENCIA DE DATOS CIFRADOS
             transferencia_bidireccional(client_socket, remote_socket)
 
         # Caso 2: Métodos HTTP normales (GET, POST...)
         else:
-            # Buscamos la línea "Host: ..."
             host = None
             port = 80
             for line in request_str.split('\r\n'):
@@ -122,7 +111,7 @@ def manejar_conexion(client_socket, client_addr):
                         port = int(port_str)
                     break
             
-            print(f"🌐 HTTP Request hacia: {host}")
+            print(f"HTTP Request hacia: {host}")
 
             if esta_bloqueado(host):
                 enviar_error_http(client_socket)
@@ -132,12 +121,12 @@ def manejar_conexion(client_socket, client_addr):
             # Conectar y reenviar
             remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             remote_socket.connect((host, port))
-            remote_socket.sendall(request_data) # Enviamos lo que ya leímos
+            remote_socket.sendall(request_data)
             
             transferencia_bidireccional(client_socket, remote_socket)
 
     except Exception as e:
-        pass # Errores de conexión son normales
+        pass
     finally:
         if client_socket: client_socket.close()
         if remote_socket: remote_socket.close()
@@ -148,7 +137,7 @@ def iniciar_proxy():
     server.bind((PROXY_HOST, PROXY_PORT))
     server.listen(50)
     
-    print(f"🚀 Proxy Mejorado (HTTPS Support) corriendo en {PROXY_HOST}:{PROXY_PORT}")
+    print(f"Proxy Mejorado (HTTPS Support) corriendo en {PROXY_HOST}:{PROXY_PORT}")
     
     while True:
         try:
